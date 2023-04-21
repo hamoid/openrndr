@@ -12,6 +12,11 @@ private val logger = KotlinLogging.logger {  }
 class ApplicationBaseGLFWGL3 : ApplicationBase() {
     init {
         logger.debug { "initializing ApplicationBaseGLFWGL3" }
+
+        // This line is here to test if we can get rid of the requirement
+        // of using -XstartOnFirstThread on Mac.
+        org.lwjgl.system.Configuration.LIBRARY_NAME.set("glfw_async")
+
         if (!glfwInit()) {
             throw IllegalStateException("Unable to initialize GLFW")
         }
