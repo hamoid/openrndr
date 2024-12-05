@@ -40,6 +40,12 @@ class ScreenRecorder : Extension {
     /** the output file, auto-determined if left null */
     var outputFile: String? = null
 
+    /**
+     * When false, VideoWriterProfile is responsible for all ffmpeg arguments.
+     * Useful for video streaming or other advanced usage
+     */
+    var includeDefaultArguments = true
+
     /** the framerate of the output video */
     var frameRate = 30
 
@@ -127,6 +133,7 @@ class ScreenRecorder : Extension {
         }
 
         videoWriter.output(filename)
+        videoWriter.includeDefaultArguments = includeDefaultArguments
         videoWriter.size(advisedWidth, advisedHeight)
         videoWriter.frameRate = frameRate
     }

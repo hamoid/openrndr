@@ -121,6 +121,7 @@ class VideoWriter {
     private var movieStream: OutputStream? = null
 
     private var profile: VideoWriterProfile = H264Profile()
+    var includeDefaultArguments = false
 
     var inputFormat = "rgba"
 
@@ -207,25 +208,33 @@ class VideoWriter {
             else -> throw RuntimeException("unsupported format $inputFormat")
         }
 
-        val preamble = arrayOf(
-            "-y", "-f", "rawvideo", "-vcodec", "rawvideo",
-            "-s", String.format("%dx%d", width, height), "-pix_fmt", inputFormat, "-r", "" + frameRate, "-i", "-"
-        )
-
-        val codec = profile.arguments()
         val arguments = ArrayList<String>()
 
+        // 1. add ffmpeg executable to arguments
         val ffmpegFile = findFfmpeg()
-
         if (ffmpegFile != null) {
             arguments.add(ffmpegFile.toString())
         } else {
             arguments.add(builtInFfmpegBinary)
         }
-        arguments.addAll(listOf(*preamble))
+
+        // 2. add common arguments
+        if(includeDefaultArguments) {
+            val preamble = arrayOf(
+                "-y", "-f", "rawvideo", "-vcodec", "rawvideo",
+                "-s", String.format("%dx%d", width, height), "-pix_fmt", inputFormat, "-r", "" + frameRate, "-i", "-"
+            )
+            arguments.addAll(listOf(*preamble))
+        }
+
+        // 3. add profile codec arguments
+        val codec = profile.arguments()
         arguments.addAll(listOf(*codec))
 
-        arguments.add(finalFilename)
+        // 4. add output file name
+        if (includeDefaultArguments) {
+            arguments.add(finalFilename)
+        }
 
         logger.debug {
             "using arguments: ${arguments.joinToString()}"
@@ -289,7 +298,7 @@ class VideoWriter {
                 try {
                     logger.info { "waiting for ffmpeg to finish" }
                     ffmpeg!!.waitFor()
-                    logger.info{ "ffmpeg finished" }
+                    logger.info { "ffmpeg finished" }
                 } catch (e: InterruptedException) {
                     e.printStackTrace()
                 }
